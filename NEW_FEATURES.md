@@ -21,7 +21,7 @@ Allows the terminal to render wider than the physical screen width (e.g., 120 co
 - Font size changes automatically adjust terminal width
 
 **Known Issues:**
-- Long-press text selection temporarily disabled (interferes with scroll/pan gestures) - TODO re-enable
+- None currently known
 
 ---
 
@@ -197,11 +197,6 @@ coroutineScope.launch {
 - `app/src/main/java/org/connectbot/ui/screens/settings/SettingsScreen.kt`
   - Virtual width toggle and column selector
 
-## Uncommitted Changes
-Both repos have uncommitted changes for the scroll/pan fixes. Should commit when stable.
-
 ## TODO
-1. Re-enable long-press text selection (currently commented out in Terminal.kt ~843-866)
-2. Test edge cases: rapid scrolling, zoom gestures, orientation changes
-3. Commit changes to both repos
-4. Push to GitHub forks
+1. Test edge cases: rapid scrolling, zoom gestures, orientation changes
+2. Push commits to GitHub forks
