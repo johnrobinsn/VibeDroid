@@ -77,7 +77,8 @@ data class SettingsUiState(
     val defaultProfileId: Long = 0L,
     val availableProfiles: List<Profile> = emptyList(),
     val virtualWidthEnabled: Boolean = false,
-    val virtualWidthColumns: Int = 120
+    val virtualWidthColumns: Int = 120,
+    val rememberOrientationFontSize: Boolean = true
 )
 
 @HiltViewModel
@@ -166,6 +167,10 @@ class SettingsViewModel @Inject constructor(
             virtualWidthColumns = prefs.getInt(
                 PreferenceConstants.VIRTUAL_WIDTH_COLUMNS,
                 PreferenceConstants.VIRTUAL_WIDTH_COLUMNS_DEFAULT
+            ),
+            rememberOrientationFontSize = prefs.getBoolean(
+                PreferenceConstants.REMEMBER_ORIENTATION_FONT_SIZE,
+                PreferenceConstants.REMEMBER_ORIENTATION_FONT_SIZE_DEFAULT
             )
         )
     }
@@ -304,6 +309,12 @@ class SettingsViewModel @Inject constructor(
     fun updateVirtualWidthColumns(value: Int) {
         updateIntPref(PreferenceConstants.VIRTUAL_WIDTH_COLUMNS, value) {
             copy(virtualWidthColumns = value)
+        }
+    }
+
+    fun updateRememberOrientationFontSize(value: Boolean) {
+        updateBooleanPref(PreferenceConstants.REMEMBER_ORIENTATION_FONT_SIZE, value) {
+            copy(rememberOrientationFontSize = value)
         }
     }
 

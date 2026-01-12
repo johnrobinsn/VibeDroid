@@ -100,6 +100,27 @@ class ProfileRepository @Inject constructor(
     }
 
     /**
+     * Update the font size for a specific orientation.
+     *
+     * @param profileId The profile ID to update
+     * @param fontSize The new font size
+     * @param isPortrait Whether this is for portrait orientation
+     */
+    suspend fun updateFontSizeForOrientation(
+        profileId: Long,
+        fontSize: Int,
+        isPortrait: Boolean
+    ) = withContext(dispatchers.io) {
+        val profile = profileDao.getById(profileId) ?: return@withContext
+        val updatedProfile = if (isPortrait) {
+            profile.copy(fontSizePortrait = fontSize)
+        } else {
+            profile.copy(fontSizeLandscape = fontSize)
+        }
+        profileDao.update(updatedProfile)
+    }
+
+    /**
      * Save a profile (insert or update).
      *
      * @return The ID of the saved profile

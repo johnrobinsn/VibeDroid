@@ -79,7 +79,13 @@ data class Profile(
     val forceSizeRows: Int? = null,
 
     @ColumnInfo(name = "force_size_columns")
-    val forceSizeColumns: Int? = null
+    val forceSizeColumns: Int? = null,
+
+    @ColumnInfo(name = "font_size_portrait")
+    val fontSizePortrait: Int? = null,
+
+    @ColumnInfo(name = "font_size_landscape")
+    val fontSizeLandscape: Int? = null
 ) {
     companion object {
         /**

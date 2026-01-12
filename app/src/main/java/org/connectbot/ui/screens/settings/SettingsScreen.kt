@@ -179,6 +179,7 @@ fun SettingsScreen(
         onBellNotificationChange = viewModel::updateBellNotification,
         onVirtualWidthEnabledChange = viewModel::updateVirtualWidthEnabled,
         onVirtualWidthColumnsChange = viewModel::updateVirtualWidthColumns,
+        onRememberOrientationFontSizeChange = viewModel::updateRememberOrientationFontSize,
         modifier = modifier
     )
 }
@@ -222,6 +223,7 @@ fun SettingsScreenContent(
     onBellNotificationChange: (Boolean) -> Unit,
     onVirtualWidthEnabledChange: (Boolean) -> Unit,
     onVirtualWidthColumnsChange: (Int) -> Unit,
+    onRememberOrientationFontSizeChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -428,6 +430,15 @@ fun SettingsScreenContent(
                     summary = stringResource(R.string.pref_volumefont_summary),
                     checked = uiState.volumefont,
                     onCheckedChange = onVolumeFontChange
+                )
+            }
+
+            item {
+                SwitchPreference(
+                    title = stringResource(R.string.pref_remember_orientation_fontsize_title),
+                    summary = stringResource(R.string.pref_remember_orientation_fontsize_summary),
+                    checked = uiState.rememberOrientationFontSize,
+                    onCheckedChange = onRememberOrientationFontSizeChange
                 )
             }
 
@@ -1477,7 +1488,8 @@ private fun SettingsScreenPreview() {
             onBellVibrateChange = {},
             onBellNotificationChange = {},
             onVirtualWidthEnabledChange = {},
-            onVirtualWidthColumnsChange = {}
+            onVirtualWidthColumnsChange = {},
+            onRememberOrientationFontSizeChange = {}
         )
     }
 }

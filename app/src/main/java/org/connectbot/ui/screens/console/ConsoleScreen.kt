@@ -169,6 +169,10 @@ fun ConsoleScreen(
     val hasHardwareKeyboard = rememberHasHardwareKeyboard()
     var showSoftwareKeyboard by remember { mutableStateOf(!hasHardwareKeyboard) }
 
+    // Orientation tracking for font size
+    val configuration = LocalConfiguration.current
+    val isPortrait = configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT
+
     val termFocusRequester = remember { FocusRequester() }
 
     var forceSize: Pair<Int, Int>? by remember { mutableStateOf(null) }
@@ -286,6 +290,16 @@ fun ConsoleScreen(
                 forceSize = null
             }
         }
+    }
+
+    // Set initial orientation when bridge becomes available
+    LaunchedEffect(currentBridge) {
+        currentBridge?.setInitialOrientation(isPortrait)
+    }
+
+    // Handle orientation changes for font size
+    LaunchedEffect(isPortrait, currentBridge) {
+        currentBridge?.onOrientationChanged(isPortrait)
     }
 
     // Show snackbar when there's an error

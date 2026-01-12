@@ -356,6 +356,16 @@ class TerminalManager :
     }
 
     /**
+     * Check if font size should be remembered per orientation.
+     */
+    fun shouldRememberOrientationFontSize(): Boolean {
+        return prefs.getBoolean(
+            PreferenceConstants.REMEMBER_ORIENTATION_FONT_SIZE,
+            PreferenceConstants.REMEMBER_ORIENTATION_FONT_SIZE_DEFAULT
+        )
+    }
+
+    /**
      * Open a new connection by reading parameters from the given URI. Follows
      * format specified by an individual transport.
      */

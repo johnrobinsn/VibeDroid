@@ -90,6 +90,9 @@ class TerminalBridge {
     private var currentProfileId: Long? = null
     private var profileObservationJob: Job? = null
 
+    // Orientation-aware font size tracking
+    private var isPortraitOrientation: Boolean = true
+
     val manager: TerminalManager
 
     var host: Host
@@ -353,8 +356,12 @@ class TerminalBridge {
      * Apply profile settings to the terminal.
      */
     private fun applyProfileSettings(profile: org.connectbot.data.entity.Profile) {
-        // Apply font size
-        val newFontSize = if (profile.fontSize > 0) profile.fontSize else DEFAULT_FONT_SIZE_SP
+        // Apply font size - use orientation-specific size if feature is enabled
+        val newFontSize = if (manager.shouldRememberOrientationFontSize()) {
+            getFontSizeForOrientation(profile, isPortraitOrientation)
+        } else {
+            if (profile.fontSize > 0) profile.fontSize else DEFAULT_FONT_SIZE_SP
+        }
         if (newFontSize.toFloat() != fontSizeSp) {
             setFontSize(newFontSize.toFloat())
         }
@@ -1017,6 +1024,7 @@ class TerminalBridge {
      */
     fun increaseFontSize() {
         setFontSize(fontSizeSp + FONT_SIZE_STEP, false)
+        persistFontSizeForOrientation()
     }
 
     /**
@@ -1024,6 +1032,86 @@ class TerminalBridge {
      */
     fun decreaseFontSize() {
         setFontSize(fontSizeSp - FONT_SIZE_STEP, false)
+        persistFontSizeForOrientation()
+    }
+
+    /**
+     * Called when the device orientation changes.
+     * Loads the appropriate font size for the new orientation if the feature is enabled.
+     *
+     * @param isPortrait Whether the device is now in portrait orientation
+     */
+    fun onOrientationChanged(isPortrait: Boolean) {
+        if (isPortrait == isPortraitOrientation) {
+            return // No change
+        }
+        isPortraitOrientation = isPortrait
+
+        if (!manager.shouldRememberOrientationFontSize()) {
+            return // Feature disabled
+        }
+
+        val profileId = currentProfileId ?: return
+        val profile = manager.profileRepository.getByIdBlocking(profileId) ?: return
+
+        val newFontSize = getFontSizeForOrientation(profile, isPortrait)
+        if (newFontSize.toFloat() != fontSizeSp) {
+            setFontSize(newFontSize.toFloat(), false)
+        }
+    }
+
+    /**
+     * Sets the initial orientation and loads the appropriate font size.
+     * Called during setup when ConsoleScreen first displays.
+     *
+     * @param isPortrait Whether the device is in portrait orientation
+     */
+    fun setInitialOrientation(isPortrait: Boolean) {
+        isPortraitOrientation = isPortrait
+
+        if (!manager.shouldRememberOrientationFontSize()) {
+            return // Feature disabled, use default font size
+        }
+
+        val profileId = currentProfileId ?: return
+        val profile = manager.profileRepository.getByIdBlocking(profileId) ?: return
+
+        val orientationFontSize = getFontSizeForOrientation(profile, isPortrait)
+        if (orientationFontSize.toFloat() != fontSizeSp) {
+            setFontSize(orientationFontSize.toFloat(), false)
+        }
+    }
+
+    /**
+     * Get the font size for a specific orientation from a profile.
+     * Falls back to the default fontSize if no orientation-specific size is set.
+     */
+    private fun getFontSizeForOrientation(profile: org.connectbot.data.entity.Profile, isPortrait: Boolean): Int {
+        return if (isPortrait) {
+            profile.fontSizePortrait ?: profile.fontSize
+        } else {
+            profile.fontSizeLandscape ?: profile.fontSize
+        }
+    }
+
+    /**
+     * Persist the current font size to the profile for the current orientation.
+     * Only persists if the "remember font size per orientation" feature is enabled.
+     */
+    private fun persistFontSizeForOrientation() {
+        if (!manager.shouldRememberOrientationFontSize()) {
+            return
+        }
+
+        val profileId = currentProfileId ?: return
+
+        scope.launch {
+            manager.profileRepository.updateFontSizeForOrientation(
+                profileId = profileId,
+                fontSize = fontSizeSp.toInt(),
+                isPortrait = isPortraitOrientation
+            )
+        }
     }
 
     companion object {

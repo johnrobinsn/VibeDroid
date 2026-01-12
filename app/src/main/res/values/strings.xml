@@ -302,6 +302,11 @@
 	<!-- Summary for the volume keys control font size preference -->
 	<string name="pref_volumefont_summary">"Font size can also be changed in profile settings"</string>
 
+	<!-- Name for the remember font size per orientation preference -->
+	<string name="pref_remember_orientation_fontsize_title">"Remember font size per orientation"</string>
+	<!-- Summary for the remember font size per orientation preference -->
+	<string name="pref_remember_orientation_fontsize_summary">"Save separate font sizes for portrait and landscape"</string>
+
 	<!-- Name for the memorize keys preference -->
 	<string name="pref_memkeys_title">"Remember keys in memory"</string>
 	<!-- Summary for the memorize keys preference -->

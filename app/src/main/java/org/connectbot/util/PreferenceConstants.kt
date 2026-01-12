@@ -89,4 +89,8 @@ object PreferenceConstants {
     const val VIRTUAL_WIDTH_ENABLED_DEFAULT: Boolean = false
     const val VIRTUAL_WIDTH_COLUMNS: String = "virtualWidthColumns"
     const val VIRTUAL_WIDTH_COLUMNS_DEFAULT: Int = 120
+
+    /* Orientation-specific font size settings */
+    const val REMEMBER_ORIENTATION_FONT_SIZE: String = "rememberOrientationFontSize"
+    const val REMEMBER_ORIENTATION_FONT_SIZE_DEFAULT: Boolean = true
 }
