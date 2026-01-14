@@ -106,11 +106,11 @@ This is **VibeDroid**, johnrobinsn's fork of ConnectBot focused on "vibe coding"
 
 ### Git Remotes
 ```bash
-# Push to VibeDroid repo (NOT origin which points to upstream ConnectBot)
+# Push to VibeTTY repo (NOT origin which points to upstream ConnectBot)
 git push fork main
 
 # Remote URLs:
-# fork  -> https://github.com/johnrobinsn/VibeDroid.git
+# fork  -> https://github.com/johnrobinsn/VibeTTY.git
 # origin -> https://github.com/connectbot/connectbot.git (upstream)
 ```
 
