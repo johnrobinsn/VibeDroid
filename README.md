@@ -1,89 +1,47 @@
-[![Build Status](https://github.com/connectbot/connectbot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/connectbot/connectbot/actions/workflows/ci.yml)
+# VibeDroid
 
-> **Experimental Fork**
->
-> This is an experimental fork of ConnectBot that adds virtual terminal width support and other enhancements:
->
-> - **Virtual Terminal Width**: Render the terminal wider than the physical screen (e.g., 120 columns on a narrow phone) with single-finger horizontal panning
-> - **Toggle Keyboard/Title Bar**: Tap the terminal to toggle UI visibility instead of show-only
-> - **Long-press Text Selection**: Works correctly with horizontal pan offset
->
-> See [NEW_FEATURES.md](NEW_FEATURES.md) for full details and implementation notes.
->
-> This fork uses [johnrobinsn/termlib](https://github.com/johnrobinsn/termlib) via JitPack.
+VibeDroid is a fork of [ConnectBot](https://github.com/connectbot/connectbot), a powerful open-source SSH client for Android.
 
-# ConnectBot
+## About This Fork
 
-ConnectBot is a [Secure Shell](https://en.wikipedia.org/wiki/Secure_Shell)
-client for Android that lets you connect to remote servers over a
-cryptographically secure link.
+VibeDroid builds upon ConnectBot's excellent foundation, adding enhancements focused on modern mobile workflows and "vibe coding" - AI-assisted development where you need a great terminal experience on the go.
 
+### New Features
 
-## How to Install
+- **Virtual Terminal Width**: Render the terminal wider than the physical screen (e.g., 120 columns on a narrow phone) with single-finger horizontal panning
+- **Improved Keyboard Handling**: Better detection of connected vs. paired Bluetooth keyboards
+- **Force Software Keyboard Option**: Show soft keyboard even when hardware keyboard is detected
+- **Toggle Keyboard/Title Bar**: Tap the terminal to toggle UI visibility
+- **Long-press Text Selection**: Works correctly with horizontal pan offset
+- **Per-orientation Font Sizes**: Remember different font sizes for portrait and landscape
 
-### Google Play
+See [NEW_FEATURES.md](NEW_FEATURES.md) for full details and implementation notes.
 
-[![Get it on Google Play][2]][1]
+## Credits
 
-  [1]: https://play.google.com/store/apps/details?id=org.connectbot
-  [2]: https://developer.android.com/images/brand/en_generic_rgb_wo_60.png
+VibeDroid is built on top of **ConnectBot**, created by Kenny Root and the ConnectBot contributors. We are grateful for their years of work creating such a solid SSH client.
 
-The easiest way to get ConnectBot is to [install from Google Play Store][1].
-If you have installed from a downloaded APK, Google Play Store can upgrade
-your installed version to the latest version. However, once it has upgraded
-*you can't install a version from the releases on GitHub anymore.*
+- **Original Project**: [ConnectBot](https://github.com/connectbot/connectbot)
+- **License**: Apache License 2.0
 
-
-### Download a release
-
-ConnectBot can be downloaded from [releases](
-https://github.com/connectbot/connectbot/releases) on GitHub. There are
-two versions:
-
--  "`google`" &mdash; for a version that uses Google Play Services
-to handle upgrading the cryptography provider
--  "`oss`" &mdash; includes the cryptography provider in the APK which
-   increases its size by a few megabytes.
-## Compiling
-
-### Android Studio
-
-ConnectBot is most easily developed in [Android Studio](
-https://developer.android.com/studio/). You can import this project
-directly from its project creation screen by importing from the GitHub URL.
-
-### Command line
-
-To compile ConnectBot using `gradlew`, you must first specify where your
-Android SDK is via the `ANDROID_SDK_HOME` environment variable. Then
-you can invoke the Gradle wrapper to build:
+## Building
 
 ```sh
+# Build the app
 ./gradlew build
+
+# Build debug APK
+./gradlew assembleGoogleDebug
 ```
 
-### Continuous Integration
+### Product Flavors
 
-ConnectBot uses [GitHub Actions](https://github.com/connectbot/connectbot/actions)
-for continuous integration. The workflow is defined in
-`.github/workflows/ci.yml`.
+- **google**: Uses Google Play Services for crypto provider updates
+- **oss**: Uses bundled Conscrypt library, fully open-source
 
-#### Running Workflows Locally with act
+## Original ConnectBot
 
-In general, simply running `./gradlew build` should cover all the
-checks run in the GitHub Actions continuous integration workflow, but you can
-run GitHub Actions workflows locally using [`nektos/act`](https://github.com/nektos/act).
-This requires Docker to be installed and running.
-
-To run the main CI workflow (`ci.yml`):
-
-```sh
-act -W .github/workflows/ci.yml
-```
-
-
-## Translations
-
-If you'd like to correct or contribute new translations to ConnectBot,
-then head on over to [ConnectBot's translations project](
-https://translations.launchpad.net/connectbot/trunk/+pots/fortune)
+For the original ConnectBot app:
+- [Google Play Store](https://play.google.com/store/apps/details?id=org.connectbot)
+- [GitHub Releases](https://github.com/connectbot/connectbot/releases)
+- [Translations](https://translations.launchpad.net/connectbot/trunk/+pots/fortune)
