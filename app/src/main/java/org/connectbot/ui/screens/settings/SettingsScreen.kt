@@ -996,7 +996,7 @@ private fun VirtualWidthColumnsDialog(
     var showCustomInput by remember { mutableStateOf(false) }
     var customValue by remember { mutableStateOf(currentColumns.toString()) }
 
-    val presetValues = listOf(80, 120, 160, 200)
+    val presetValues = listOf(80, 100, 120, 160, 200)
 
     if (showCustomInput) {
         AlertDialog(

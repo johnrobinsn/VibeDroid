@@ -78,7 +78,7 @@ data class SettingsUiState(
     val defaultProfileId: Long = 0L,
     val availableProfiles: List<Profile> = emptyList(),
     val virtualWidthEnabled: Boolean = false,
-    val virtualWidthColumns: Int = 120,
+    val virtualWidthColumns: Int = 100,
     val rememberOrientationFontSize: Boolean = true
 )
 
