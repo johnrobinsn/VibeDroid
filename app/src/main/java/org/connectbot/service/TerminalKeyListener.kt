@@ -329,7 +329,7 @@ class TerminalKeyListener(
                     return true
                 }
                 KeyEvent.KEYCODE_TAB -> {
-                    transport.write(0x09)
+                    bridge.terminalEmulator.dispatchKey(modifiersForTerminal, VTermKey.TAB)
                     return true
                 }
                 KeyEvent.KEYCODE_CAMERA -> {
@@ -363,7 +363,7 @@ class TerminalKeyListener(
                     return true
                 }
                 KeyEvent.KEYCODE_ENTER -> {
-                    bridge.terminalEmulator.dispatchKey(0, VTermKey.ENTER)
+                    bridge.terminalEmulator.dispatchKey(modifiersForTerminal, VTermKey.ENTER)
                     return true
                 }
                 KeyEvent.KEYCODE_DPAD_LEFT -> {

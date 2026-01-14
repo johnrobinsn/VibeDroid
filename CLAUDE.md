@@ -167,21 +167,23 @@ Terminal.kt has debug logging enabled (grep `Log.d("Terminal"`). Remove when sta
 - **Fix**: Added LaunchedEffect to call `onInteraction()` when `scrollState.isScrollInProgress`
 - **File**: `TerminalKeyboard.kt` lines ~181-186
 
-### Kitty Keyboard Protocol (Jan 2025)
+### Extended Keyboard Protocols (Jan 2025)
 Enables Shift+Enter, Ctrl+Enter, and other modifier combinations for modern CLI tools like Claude Code.
 
-**Key files:**
-- `termlib/.../KittyKeyboardProtocol.kt` - Protocol state, mode stack, key encoding
-- `termlib/.../TerminalEmulator.kt` - CSI sequence handling, exposes protocol API
-- `termlib/.../KeyboardHandler.kt` - Intercepts keys for Kitty encoding
-- `termlib/.../Terminal.cpp` - Native CSI fallback handler
-- `app/.../TerminalManager.kt` - `isKittyKeyboardEnabled()` preference
-- `app/.../TerminalBridge.kt` - Applies setting on terminal creation
+**Two protocols supported:**
+1. **Kitty Keyboard Protocol** (CSI u) - For modern apps, requires user preference
+2. **xterm modifyOtherKeys** (CSI 27) - For tmux compatibility, auto-enabled
 
-**Protocol flow:**
-1. User enables: Settings → Keyboard → "Enhanced keyboard protocol"
-2. App sends `CSI > flags u` to request protocol
-3. Terminal encodes keys like Shift+Enter as `ESC[13;2u`
+**Key files:**
+- `termlib/.../KittyKeyboardProtocol.kt` - Kitty protocol state, mode stack, key encoding
+- `termlib/.../ModifyOtherKeysProtocol.kt` - modifyOtherKeys state and encoding
+- `termlib/.../TerminalEmulator.kt` - CSI sequence handling, `dispatchKey()` integration
+- `app/.../TerminalKeyListener.kt` - Passes modifiers for Enter/Tab keys
+
+**tmux configuration required:**
+```bash
+set -g extended-keys always
+```
 
 **Documentation:** `docs/KITTY_KEYBOARD_PROTOCOL.md`
 

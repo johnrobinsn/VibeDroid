@@ -1,12 +1,26 @@
-# Kitty Keyboard Protocol Implementation
+# Extended Keyboard Protocol Implementation
 
 ## Overview
 
-VibeTTY implements the [Kitty Keyboard Protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) (also known as "progressive keyboard enhancement" or "CSI u encoding"). This protocol allows terminal applications to receive full modifier information for keys that traditionally don't report modifiers, such as Enter, Tab, Backspace, and Escape.
+VibeTTY implements two extended keyboard protocols that allow terminal applications to receive full modifier information for keys that traditionally don't report modifiers (Enter, Tab, Backspace, Escape):
+
+1. **Kitty Keyboard Protocol** (CSI u format) - Modern protocol used by kitty, WezTerm, and modern CLI apps
+2. **xterm modifyOtherKeys** (CSI 27 format) - Older protocol used by tmux and xterm
 
 **Primary Use Case**: Applications like Claude Code can distinguish between Enter (submit) and Shift+Enter (newline) for multi-line input.
 
-## Protocol Specification
+## Protocol Comparison
+
+| Feature | Kitty Protocol | modifyOtherKeys |
+|---------|---------------|-----------------|
+| Format | `CSI keycode ; mod u` | `CSI 27 ; mod ; keycode ~` |
+| Example (Shift+Enter) | `ESC[13;2u` | `ESC[27;2;13~` |
+| Query support | Yes (`CSI ? u`) | No |
+| Mode stack | Yes | No (single mode) |
+| Used by | kitty, WezTerm, modern apps | tmux, xterm |
+| User preference required | Yes | No (auto-enabled) |
+
+## Kitty Keyboard Protocol
 
 ### Key Encoding Format
 
@@ -20,28 +34,7 @@ Where:
 - `modifiers` = modifier bits + 1
 - `u` = final character indicating CSI u format
 
-### Modifier Encoding
-
-| Modifier | Bit Value | Transmitted Value |
-|----------|-----------|-------------------|
-| Shift    | 1         | 2 (1+1)           |
-| Alt      | 2         | 3 (2+1)           |
-| Ctrl     | 4         | 5 (4+1)           |
-| Shift+Ctrl | 5       | 6 (5+1)           |
-| Shift+Alt | 3        | 4 (3+1)           |
-
-### Examples
-
-| Key Combination | Escape Sequence | Explanation |
-|-----------------|-----------------|-------------|
-| Shift+Enter     | `ESC[13;2u`     | 13=Enter codepoint, 2=Shift+1 |
-| Ctrl+Enter      | `ESC[13;5u`     | 13=Enter, 5=Ctrl+1 |
-| Shift+Tab       | `ESC[9;2u`      | 9=Tab codepoint |
-| Alt+Backspace   | `ESC[127;3u`    | 127=Backspace, 3=Alt+1 |
-
-### Protocol Control Sequences
-
-Applications use these sequences to negotiate protocol support:
+### Control Sequences
 
 | Sequence | Direction | Purpose |
 |----------|-----------|---------|
@@ -61,37 +54,59 @@ Applications use these sequences to negotiate protocol support:
 | FLAG_REPORT_ALL_KEYS | 8 | Report all keys as escape codes |
 | FLAG_REPORT_TEXT | 16 | Report associated text |
 
+### Activation
+
+The Kitty protocol requires **two conditions** to be active:
+
+1. **User preference enabled**: Settings → Keyboard → "Enhanced keyboard protocol"
+2. **Application requests it**: App sends `CSI > flags u`
+
+## xterm modifyOtherKeys Protocol
+
+### Key Encoding Format
+
+```
+CSI 27 ; modifiers ; keycode ~
+```
+
+Where:
+- `27` = fixed marker for modifyOtherKeys
+- `modifiers` = modifier bits + 1
+- `keycode` = ASCII/Unicode value of the key
+
+### Control Sequence
+
+| Sequence | Purpose |
+|----------|---------|
+| `CSI > 4 ; 0 m` | Disable modifyOtherKeys |
+| `CSI > 4 ; 1 m` | Enable mode 1 (some keys) |
+| `CSI > 4 ; 2 m` | Enable mode 2 (all keys) |
+| `CSI > 4 m` | Disable (mode defaults to 0) |
+
+### Activation
+
+modifyOtherKeys is automatically enabled when an application sends `CSI > 4 ; mode m`. No user preference is required.
+
+## Modifier Encoding (Both Protocols)
+
+| Modifier | Bit Value | Transmitted Value |
+|----------|-----------|-------------------|
+| Shift    | 1         | 2 (1+1)           |
+| Alt      | 2         | 3 (2+1)           |
+| Ctrl     | 4         | 5 (4+1)           |
+| Shift+Ctrl | 5       | 6 (5+1)           |
+| Shift+Alt | 3        | 4 (3+1)           |
+
+## Examples
+
+| Key Combination | Kitty Format | modifyOtherKeys Format |
+|-----------------|--------------|------------------------|
+| Shift+Enter     | `ESC[13;2u`  | `ESC[27;2;13~`        |
+| Ctrl+Enter      | `ESC[13;5u`  | `ESC[27;5;13~`        |
+| Shift+Tab       | `ESC[9;2u`   | `ESC[27;2;9~`         |
+| Alt+Backspace   | `ESC[127;3u` | `ESC[27;3;127~`       |
+
 ## Architecture
-
-### Component Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Android App                              │
-│  ┌─────────────────┐    ┌──────────────────┐                    │
-│  │ TerminalBridge  │───>│ TerminalManager  │                    │
-│  │                 │    │ (reads prefs)    │                    │
-│  └────────┬────────┘    └──────────────────┘                    │
-│           │                                                      │
-│           ▼                                                      │
-│  ┌─────────────────────────────────────────────────────────────┐│
-│  │                      termlib                                 ││
-│  │  ┌──────────────────┐    ┌─────────────────────────────┐   ││
-│  │  │ KeyboardHandler  │───>│ TerminalEmulator            │   ││
-│  │  │                  │    │  - KittyKeyboardProtocol    │   ││
-│  │  │ shouldEncode?    │    │  - Mode stack               │   ││
-│  │  │ encodeKey()      │    │  - CSI sequence handling    │   ││
-│  │  └──────────────────┘    └──────────────┬──────────────┘   ││
-│  │                                          │                   ││
-│  │                                          ▼                   ││
-│  │                          ┌───────────────────────────────┐  ││
-│  │                          │ Terminal.cpp (Native)         │  ││
-│  │                          │  - CSI fallback handler       │  ││
-│  │                          │  - Forwards to Kotlin         │  ││
-│  │                          └───────────────────────────────┘  ││
-│  └─────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────┘
-```
 
 ### Key Files
 
@@ -99,93 +114,120 @@ Applications use these sequences to negotiate protocol support:
 
 | File | Purpose |
 |------|---------|
-| `KittyKeyboardProtocol.kt` | Protocol state management, mode stack, key encoding |
-| `TerminalEmulator.kt` | Handles CSI sequences, exposes protocol to keyboard handler |
-| `KeyboardHandler.kt` | Intercepts keys, decides when to use Kitty encoding |
-| `TerminalCallbacks.kt` | Interface for CSI callback from native layer |
-| `Terminal.cpp` | Native CSI fallback handler, forwards to Kotlin |
-| `Terminal.h` | Native layer declarations |
+| `KittyKeyboardProtocol.kt` | Kitty protocol state, mode stack, key encoding |
+| `ModifyOtherKeysProtocol.kt` | modifyOtherKeys state and key encoding |
+| `TerminalEmulator.kt` | CSI sequence handling, protocol integration |
+| `Terminal.cpp` | Native CSI fallback handler |
 
 #### app
 
 | File | Purpose |
 |------|---------|
-| `PreferenceConstants.kt` | `KITTY_KEYBOARD_PROTOCOL` setting constant |
-| `SettingsViewModel.kt` | Setting state and update function |
-| `SettingsScreen.kt` | UI toggle in Keyboard section |
-| `TerminalManager.kt` | Preference accessor, live update handling |
-| `TerminalBridge.kt` | Applies setting on terminal creation |
-| `strings.xml` | "Enhanced keyboard protocol" UI strings |
+| `TerminalKeyListener.kt` | Key event handling, passes modifiers |
+| `TerminalBridge.kt` | Transport operations |
+| `PreferenceConstants.kt` | `KITTY_KEYBOARD_PROTOCOL` setting |
+| `SettingsScreen.kt` | UI toggle for Kitty protocol |
 
-## Implementation Details
-
-### Protocol Activation
-
-The protocol requires **two conditions** to be active:
-
-1. **User preference enabled**: Settings → Keyboard → "Enhanced keyboard protocol"
-2. **Application requests it**: App sends `CSI > flags u`
-
-This dual-gate approach ensures:
-- Users have control over the feature
-- Legacy applications aren't affected
-- Protocol is only active when both terminal and app support it
-
-### Mode Stack
-
-The protocol maintains separate mode stacks for main and alternate screens:
+### Key Dispatch Flow
 
 ```kotlin
-class KittyKeyboardProtocol {
-    private val mainScreenStack = ArrayDeque<Int>()
-    private val altScreenStack = ArrayDeque<Int>()
-    var isAlternateScreen: Boolean = false
-
-    val isActive: Boolean
-        get() = isEnabledByUser && currentStack.isNotEmpty()
-}
-```
-
-### Key Interception Flow
-
-```kotlin
-// In KeyboardHandler.onKeyEvent()
-val vtermKey = mapToVTermKey(key)
-if (vtermKey != null) {
-    // Check if Kitty should handle this key
-    if (terminalEmulator.shouldEncodeKitty(vtermKey, modifiers)) {
-        val encoded = terminalEmulator.encodeKittyKey(vtermKey, modifiers)
+override fun dispatchKey(modifiers: Int, key: Int) {
+    // Check Kitty protocol first (requires user preference + app request)
+    if (kittyProtocol.shouldEncode(key, modifiers)) {
+        val encoded = kittyProtocol.encodeKey(key, modifiers)
         if (encoded != null) {
-            terminalEmulator.writeKeyboardOutput(encoded)
-            return true
+            handler.post { onKeyboardInput.invoke(encoded) }
+            return
         }
     }
-    // Fall back to normal libvterm handling
-    terminalEmulator.dispatchKey(modifiers, vtermKey)
+
+    // Check modifyOtherKeys (auto-enabled by apps like tmux)
+    if (modifyOtherKeysProtocol.shouldEncode(key, modifiers)) {
+        val encoded = modifyOtherKeysProtocol.encodeKey(key, modifiers)
+        if (encoded != null) {
+            handler.post { onKeyboardInput.invoke(encoded) }
+            return
+        }
+    }
+
+    // Default: let native terminal handle it
+    terminalNative.dispatchKey(modifiers, key)
 }
 ```
 
-### CSI Sequence Handling (Native → Kotlin)
+## tmux Configuration
 
-1. libvterm receives CSI sequence it doesn't recognize
-2. `termCsiFallback()` in Terminal.cpp is called
-3. Sequence details forwarded to Kotlin via JNI
-4. `TerminalEmulator.onCsiSequence()` processes the sequence
-5. For `CSI ? u` queries, response written back to PTY
+tmux uses modifyOtherKeys to communicate with the outer terminal. For Shift+Enter and other extended keys to work inside tmux:
 
-```cpp
-// Terminal.cpp
-int Terminal::termCsiFallback(const char* leader, const long args[],
-                               int argcount, const char* intermed,
-                               char command, void* user) {
-    auto* term = static_cast<Terminal*>(user);
-    return term->invokeCsiSequence(leader, args, argcount, intermed, command);
-}
+### Required tmux.conf Settings
+
+```bash
+# Enable extended keys (required)
+set -g extended-keys always
 ```
 
-### Keys Supported
+### How It Works
 
-Keys that receive Kitty encoding when modifiers are present:
+1. tmux sends `CSI > 4 ; 1 m` to VibeTTY to request modifyOtherKeys
+2. VibeTTY enables modifyOtherKeys mode
+3. User presses Shift+Enter
+4. VibeTTY sends `ESC[27;2;13~` to tmux
+5. tmux decodes it and forwards to the pane (in CSI u format: `ESC[13;2u`)
+
+### tmux Version Notes
+
+- **tmux 3.4**: Use `extended-keys always` for best compatibility
+- **tmux 3.5+**: Better native support, `extended-keys on` may suffice
+
+## Testing
+
+### Direct Connection (No tmux)
+
+1. Enable setting: Settings → Keyboard → "Enhanced keyboard protocol"
+2. Connect to any host
+3. Run `cat -v`
+4. Press Shift+Enter
+5. Expected: `^[[13;2u` (Kitty format)
+
+### With tmux
+
+1. Ensure `set -g extended-keys always` in `~/.tmux.conf`
+2. Restart tmux: `tmux kill-server && tmux`
+3. Run `cat -v` inside tmux
+4. Press Shift+Enter
+5. Expected: `^[[13;2u` (tmux converts to CSI u format)
+
+### Protocol Negotiation Test (Kitty)
+
+```bash
+# Query current mode
+printf '\e[?u'
+
+# Push mode with disambiguate flag
+printf '\e[>1u'
+
+# Query again
+printf '\e[?u'
+
+# Pop mode
+printf '\e[<u'
+```
+
+### Protocol Test (modifyOtherKeys)
+
+```bash
+# Enable mode 2
+printf '\e[>4;2m'
+
+# Run cat -v and press Shift+Enter
+cat -v
+# Should show: ^[[27;2;13~
+
+# Disable
+printf '\e[>4;0m'
+```
+
+## Keys Supported
 
 | Key | Unicode Codepoint |
 |-----|-------------------|
@@ -194,56 +236,22 @@ Keys that receive Kitty encoding when modifiers are present:
 | Backspace | 127 |
 | Escape | 27 |
 
-## Testing
-
-### Manual Testing with cat -v
-
-1. Enable setting: Settings → Keyboard → "Enhanced keyboard protocol"
-2. Connect to any host
-3. Run `cat -v`
-4. Press Shift+Enter
-5. Expected output: `^[[13;2u`
-
-### Protocol Negotiation Test
-
-```bash
-# Query current mode (should respond with CSI ? 0 u if no app has pushed)
-printf '\e[?u'
-
-# Push mode with disambiguate flag
-printf '\e[>1u'
-
-# Query again (should respond with CSI ? 1 u)
-printf '\e[?u'
-
-# Pop mode
-printf '\e[<u'
-```
-
-### Testing with Claude Code
-
-1. Enable "Enhanced keyboard protocol" in VibeTTY settings
-2. SSH to a host running Claude Code
-3. In Claude Code's input, press Shift+Enter
-4. Should create a newline without submitting
-
 ## Compatibility
 
-### Applications That Support Kitty Protocol
-
-- Kitty terminal (reference implementation)
+### Applications Using Kitty Protocol
+- Kitty terminal
 - WezTerm
-- Alacritty (partial)
 - foot
 - Claude Code
-- Many modern CLI tools
+- Neovim (with configuration)
 
-### TERM Variable
-
-Some applications check the TERM environment variable to detect Kitty support. Setting `TERM=xterm-kitty` may improve compatibility, but VibeTTY also responds to protocol queries regardless of TERM.
+### Applications Using modifyOtherKeys
+- tmux
+- xterm
+- GNU Emacs
 
 ## References
 
 - [Kitty Keyboard Protocol Specification](https://sw.kovidgoyal.net/kitty/keyboard-protocol/)
-- [libvterm Documentation](https://www.leonerd.org.uk/code/libvterm/)
-- [VT100.net - Terminal Control Sequences](https://vt100.net/)
+- [xterm modifyOtherKeys](https://invisible-island.net/xterm/manpage/xterm.html#VT100-Widget-Resources:modifyOtherKeys)
+- [tmux extended-keys](https://github.com/tmux/tmux/wiki/Modifier-Keys)
