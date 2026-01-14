@@ -181,6 +181,7 @@ fun SettingsScreen(
         onVirtualWidthEnabledChange = viewModel::updateVirtualWidthEnabled,
         onVirtualWidthColumnsChange = viewModel::updateVirtualWidthColumns,
         onRememberOrientationFontSizeChange = viewModel::updateRememberOrientationFontSize,
+        onKittyKeyboardProtocolChange = viewModel::updateKittyKeyboardProtocol,
         modifier = modifier
     )
 }
@@ -226,6 +227,7 @@ fun SettingsScreenContent(
     onVirtualWidthEnabledChange: (Boolean) -> Unit,
     onVirtualWidthColumnsChange: (Int) -> Unit,
     onRememberOrientationFontSizeChange: (Boolean) -> Unit,
+    onKittyKeyboardProtocolChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -481,6 +483,15 @@ fun SettingsScreenContent(
                     summary = stringResource(R.string.pref_forcesoftkeyboard_summary),
                     checked = uiState.forceSoftKeyboard,
                     onCheckedChange = onForceSoftKeyboardChange
+                )
+            }
+
+            item {
+                SwitchPreference(
+                    title = stringResource(R.string.pref_kittykeyboard_title),
+                    summary = stringResource(R.string.pref_kittykeyboard_summary),
+                    checked = uiState.kittyKeyboardProtocol,
+                    onCheckedChange = onKittyKeyboardProtocolChange
                 )
             }
 
@@ -1501,7 +1512,8 @@ private fun SettingsScreenPreview() {
             onBellNotificationChange = {},
             onVirtualWidthEnabledChange = {},
             onVirtualWidthColumnsChange = {},
-            onRememberOrientationFontSizeChange = {}
+            onRememberOrientationFontSizeChange = {},
+            onKittyKeyboardProtocolChange = {}
         )
     }
 }

@@ -8,6 +8,7 @@ VibeDroid builds upon ConnectBot's excellent foundation, adding enhancements foc
 
 ### New Features
 
+- **Kitty Keyboard Protocol**: Full support for the [Kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) enabling Shift+Enter, Ctrl+Enter, and other modifier combinations in modern CLI tools like Claude Code
 - **Virtual Terminal Width**: Render the terminal wider than the physical screen (e.g., 120 columns on a narrow phone) with single-finger horizontal panning
 - **Improved Keyboard Handling**: Better detection of connected vs. paired Bluetooth keyboards
 - **Force Software Keyboard Option**: Show soft keyboard even when hardware keyboard is detected

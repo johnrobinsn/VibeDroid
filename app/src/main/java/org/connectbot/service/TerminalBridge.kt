@@ -257,6 +257,9 @@ class TerminalBridge {
         val ansiColors = fullColorPalette.sliceArray(0 until 16)
         terminalEmulator.applyColorScheme(ansiColors, defaultFgColor, defaultBgColor)
 
+        // Apply Kitty keyboard protocol setting
+        terminalEmulator.setKittyKeyboardEnabled(manager.isKittyKeyboardEnabled())
+
         keyListener = TerminalKeyListener(manager, this, encoding)
 
         // Start the transport operation processor to serialize all writes

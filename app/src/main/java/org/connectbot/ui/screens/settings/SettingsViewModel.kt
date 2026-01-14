@@ -79,7 +79,8 @@ data class SettingsUiState(
     val availableProfiles: List<Profile> = emptyList(),
     val virtualWidthEnabled: Boolean = false,
     val virtualWidthColumns: Int = 100,
-    val rememberOrientationFontSize: Boolean = true
+    val rememberOrientationFontSize: Boolean = true,
+    val kittyKeyboardProtocol: Boolean = false
 )
 
 @HiltViewModel
@@ -176,6 +177,10 @@ class SettingsViewModel @Inject constructor(
             rememberOrientationFontSize = prefs.getBoolean(
                 PreferenceConstants.REMEMBER_ORIENTATION_FONT_SIZE,
                 PreferenceConstants.REMEMBER_ORIENTATION_FONT_SIZE_DEFAULT
+            ),
+            kittyKeyboardProtocol = prefs.getBoolean(
+                PreferenceConstants.KITTY_KEYBOARD_PROTOCOL,
+                PreferenceConstants.KITTY_KEYBOARD_PROTOCOL_DEFAULT
             )
         )
     }
@@ -326,6 +331,12 @@ class SettingsViewModel @Inject constructor(
     fun updateRememberOrientationFontSize(value: Boolean) {
         updateBooleanPref(PreferenceConstants.REMEMBER_ORIENTATION_FONT_SIZE, value) {
             copy(rememberOrientationFontSize = value)
+        }
+    }
+
+    fun updateKittyKeyboardProtocol(value: Boolean) {
+        updateBooleanPref(PreferenceConstants.KITTY_KEYBOARD_PROTOCOL, value) {
+            copy(kittyKeyboardProtocol = value)
         }
     }
 

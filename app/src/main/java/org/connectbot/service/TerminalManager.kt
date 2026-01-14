@@ -366,6 +366,16 @@ class TerminalManager :
     }
 
     /**
+     * Check if Kitty keyboard protocol is enabled.
+     */
+    fun isKittyKeyboardEnabled(): Boolean {
+        return prefs.getBoolean(
+            PreferenceConstants.KITTY_KEYBOARD_PROTOCOL,
+            PreferenceConstants.KITTY_KEYBOARD_PROTOCOL_DEFAULT
+        )
+    }
+
+    /**
      * Open a new connection by reading parameters from the given URI. Follows
      * format specified by an individual transport.
      */
@@ -809,6 +819,16 @@ class TerminalManager :
             connectivityMonitor.setWantWifiLock(lockingWifi)
         } else if (PreferenceConstants.MEMKEYS == key) {
             updateSavingKeys()
+        } else if (PreferenceConstants.KITTY_KEYBOARD_PROTOCOL == key) {
+            val enabled = sharedPreferences.getBoolean(
+                PreferenceConstants.KITTY_KEYBOARD_PROTOCOL,
+                PreferenceConstants.KITTY_KEYBOARD_PROTOCOL_DEFAULT
+            )
+            synchronized(_bridges) {
+                for (bridge in _bridges) {
+                    bridge.terminalEmulator.setKittyKeyboardEnabled(enabled)
+                }
+            }
         }
     }
 

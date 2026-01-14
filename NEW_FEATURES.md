@@ -1,6 +1,55 @@
 # New Features
 
-This document tracks new features added to ConnectBot.
+This document tracks new features added to VibeDroid.
+
+## Kitty Keyboard Protocol
+
+**Status:** Complete
+**Documentation:** [docs/KITTY_KEYBOARD_PROTOCOL.md](docs/KITTY_KEYBOARD_PROTOCOL.md)
+
+**Files Modified:**
+- `termlib/lib/src/main/java/org/connectbot/terminal/KittyKeyboardProtocol.kt` (new)
+- `termlib/lib/src/main/java/org/connectbot/terminal/TerminalEmulator.kt`
+- `termlib/lib/src/main/java/org/connectbot/terminal/KeyboardHandler.kt`
+- `termlib/lib/src/main/java/org/connectbot/terminal/TerminalCallbacks.kt`
+- `termlib/lib/src/main/cpp/Terminal.cpp`
+- `termlib/lib/src/main/cpp/Terminal.h`
+- `app/src/main/java/org/connectbot/util/PreferenceConstants.kt`
+- `app/src/main/java/org/connectbot/ui/screens/settings/SettingsViewModel.kt`
+- `app/src/main/java/org/connectbot/ui/screens/settings/SettingsScreen.kt`
+- `app/src/main/java/org/connectbot/service/TerminalManager.kt`
+- `app/src/main/java/org/connectbot/service/TerminalBridge.kt`
+
+**Description:**
+Implements the [Kitty Keyboard Protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) (CSI u encoding) allowing applications to receive full modifier information for keys that traditionally don't report modifiers.
+
+**Key Use Case:**
+Claude Code and other modern CLI tools can now distinguish between Enter (submit) and Shift+Enter (newline), enabling multi-line input without submitting.
+
+**Features:**
+- CSI u key encoding (e.g., Shift+Enter → `ESC[13;2u`)
+- Protocol negotiation (push/pop/query mode)
+- Separate mode stacks for main and alternate screens
+- User preference toggle in Settings → Keyboard
+- Live preference updates (no restart required)
+
+**Supported Keys:**
+- Enter (13), Tab (9), Backspace (127), Escape (27) with any modifier combination
+
+**How to Enable:**
+1. Settings → Keyboard → "Enhanced keyboard protocol" (toggle ON)
+2. Connect to a host running an application that supports Kitty protocol
+3. The application will request the protocol via `CSI > flags u`
+4. Modified keys now send CSI u sequences
+
+**Testing:**
+```bash
+# With setting enabled, run:
+cat -v
+# Press Shift+Enter, should see: ^[[13;2u
+```
+
+---
 
 ## Virtual Terminal Width
 

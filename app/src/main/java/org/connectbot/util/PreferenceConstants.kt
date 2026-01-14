@@ -95,4 +95,8 @@ object PreferenceConstants {
     /* Orientation-specific font size settings */
     const val REMEMBER_ORIENTATION_FONT_SIZE: String = "rememberOrientationFontSize"
     const val REMEMBER_ORIENTATION_FONT_SIZE_DEFAULT: Boolean = true
+
+    /* Kitty keyboard protocol support */
+    const val KITTY_KEYBOARD_PROTOCOL: String = "kittyKeyboardProtocol"
+    const val KITTY_KEYBOARD_PROTOCOL_DEFAULT: Boolean = false
 }
